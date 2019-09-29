@@ -1,5 +1,5 @@
 from flask import render_template, flash, redirect, url_for, request
-from flask_login import login_user, login_required
+from flask_login import login_user, login_required, logout_user
 
 from app import app, query_db
 from app.forms import IndexForm, PostForm, FriendsForm, ProfileForm, CommentsForm
@@ -28,6 +28,12 @@ def index():
             form.register.validate_parameters()
             return redirect(url_for('index'))
     return render_template('index.html', title='Welcome', form=form)
+
+
+@app.route("/logout/")
+def logout() :
+    logout_user()
+    return redirect(url_for("index"))
 
 
 # content stream page
