@@ -1,5 +1,5 @@
 from flask import render_template, flash, redirect, url_for, request
-from flask_login import login_user, login_required, logout_user
+from flask_login import login_user, login_required, logout_user, current_user
 
 from app import app, query_db
 from app.forms import IndexForm, PostForm, FriendsForm, ProfileForm, CommentsForm
@@ -18,6 +18,7 @@ def index():
         if form.login.validate_on_submit():
             user = form.login.get_authenticated_user()
             if user:
+                login_user(user)
                 return redirect(url_for('stream', username=form.login.username.data))
             else:
                 flash('Sorry, this user does not exist!')
@@ -31,7 +32,7 @@ def index():
 
 
 @app.route("/logout/")
-def logout() :
+def logout():
     logout_user()
     return redirect(url_for("index"))
 
@@ -104,6 +105,10 @@ def friends(username):
 @app.route('/profile/<username>', methods=['GET', 'POST'])
 @login_required
 def profile(username):
+    if current_user.username != username:
+        flash("You don't have access to this page")
+        return redirect(url_for("stream", username=current_user.username))
+
     form = ProfileForm()
     if form.is_submitted():
         query_db(
