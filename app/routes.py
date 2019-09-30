@@ -4,7 +4,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 from app import app, query_db
 from app.ORM.Comment import Comment, get_all_comments_by_post
 from app.ORM.Post import Post, get_all_posts_by_user, get_post_by_id
-from app.ORM.User import get_user_by_username
+from app.ORM.User import get_user_by_username, get_all_friends_by_user
 from app.forms import IndexForm, PostForm, FriendsForm, ProfileForm, CommentsForm
 from datetime import datetime
 import os
@@ -24,7 +24,7 @@ def index():
                 login_user(user)
                 return redirect(url_for('stream', username=form.login.username.data))
             else:
-                flash('Sorry, this user does not exist!')
+                flash('Sorry, wrong credentials !')
         else:
             flash('Sorry, wrong password!')
     elif form.register.is_submitted() and form.register.submit.data:  # Register
@@ -87,18 +87,18 @@ def comments(username, p_id):
 @login_required
 def friends(username):
     form = FriendsForm()
-    user = query_db('SELECT * FROM Users WHERE username="{}";'.format(username), one=True)
-    if form.is_submitted():
-        friend = query_db('SELECT * FROM Users WHERE username="{}";'.format(form.username.data), one=True)
-        if friend is None:
-            flash('User does not exist')
-        else:
-            query_db('INSERT INTO Friends (u_id, f_id) VALUES({}, {});'.format(user['id'], friend['id']))
 
-    all_friends = query_db(
-        'SELECT * FROM Friends AS f JOIN Users as u ON f.f_id=u.id WHERE f.u_id={} AND f.f_id!={} ;'.format(user['id'],
-                                                                                                            user['id']))
-    return render_template('friends.html', title='Friends', username=username, friends=all_friends, form=form)
+    user = get_user_by_username(username)
+    if form.validate_on_submit():
+        friend_user = get_user_by_username(form.username.data)
+        if friend_user is None:
+            flash('User does not exist')
+        elif friend_user in user.friends:
+            flash('You are already friend with {}'.format(friend_user.username))
+        else:
+            user.friend.append(friend_user)
+            user.persist_friends()
+    return render_template('friends.html', title='Friends', username=username, friends=user.friends, form=form)
 
 
 # see and edit detailed profile information of a user
