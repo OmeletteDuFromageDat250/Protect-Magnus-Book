@@ -1,12 +1,11 @@
-from flask import render_template, flash, redirect, url_for, request
+from flask import render_template, flash, redirect, url_for
 from flask_login import login_user, login_required, logout_user, current_user
 
-from app import app, query_db
+from app import app
 from app.ORM.Comment import Comment, get_all_comments_by_post
 from app.ORM.Post import Post, get_all_posts_by_user, get_post_by_id
-from app.ORM.User import get_user_by_username, get_all_friends_by_user
+from app.ORM.User import get_user_by_username
 from app.forms import IndexForm, PostForm, FriendsForm, ProfileForm, CommentsForm
-from datetime import datetime
 import os
 
 
@@ -16,6 +15,9 @@ import os
 @app.route('/', methods=['GET', 'POST'])
 @app.route('/index', methods=['GET', 'POST'])
 def index():
+    if current_user.is_authenticated:
+        return redirect(url_for("stream", username=current_user.username))
+
     form = IndexForm()
     if form.login.is_submitted() and form.login.submit.data:  # Login
         if form.login.validate_on_submit():
