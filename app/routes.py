@@ -87,8 +87,12 @@ def comments(username, p_id):
 @login_required
 def friends(username):
     form = FriendsForm()
-
     user = get_user_by_username(username)
+
+    if current_user.id != user.id:
+        flash("You don't have access to this section!")
+        return redirect(url_for('friends', username=current_user.username))
+
     if form.validate_on_submit():
         friend_user = get_user_by_username(form.username.data)
         if friend_user is None:
@@ -98,7 +102,7 @@ def friends(username):
         else:
             user.friend.append(friend_user)
             user.persist_friends()
-    return render_template('friends.html', title='Friends', username=username, friends=user.friends, form=form)
+    return render_template('friends.html', title='Friends', username=username, user=user, form=form)
 
 
 # see and edit detailed profile information of a user
