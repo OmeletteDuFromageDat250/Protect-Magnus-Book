@@ -19,6 +19,9 @@ class Post:
             self.image,
             self.creation_time))
 
+    def __eq__(self, other):
+        return self.__class__ == other.__class__ and self.id == other.id
+
 
 def get_post_by_id(post_id):
     query = query_db(

@@ -33,6 +33,8 @@ class User(UserMixin):
                 self.birthday, self.username
             ))
 
+    def __eq__(self, other):
+        return self.__class__ == other.__class__ and self.id == other.id
 
 def get_user_by_username(user_name):
     try:

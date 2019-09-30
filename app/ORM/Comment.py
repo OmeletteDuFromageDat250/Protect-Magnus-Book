@@ -20,6 +20,9 @@ class Comment:
             self.comment,
             self.creation_time))
 
+    def __eq__(self, other):
+        return self.__class__ == other.__class__ and self.id == other.id
+
 
 def get_all_comments_by_post(post):
     query = query_db(
