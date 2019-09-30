@@ -4,7 +4,8 @@ from app import login, query_db
 
 
 class User(UserMixin):
-    def __init__(self, username, first_name, last_name, password, education="", employment="",  music="",  movie="",  nationality="",  birthday="", id=0, active=True):
+    def __init__(self, username, first_name, last_name, password, education="", employment="", music="", movie="",
+                 nationality="", birthday="", id=0, active=True):
         self.id = id  # Never persisted
         self.username = username
         self.first_name = first_name
@@ -36,6 +37,17 @@ class User(UserMixin):
 def get_user_by_username(user_name):
     try:
         query = query_db('SELECT * FROM Users WHERE username == "{}";'.format(user_name), one=True)
+        user = User(query["username"], query["first_name"], query["last_name"], query["password"], query["education"],
+                    query["employment"], query["music"], query["movie"], query["nationality"], query["birthday"],
+                    query["id"])
+        return user
+    except:
+        return None
+
+
+def get_user_by_id(user_id):
+    try:
+        query = query_db('SELECT * FROM Users WHERE id == "{}";'.format(user_id), one=True)
         user = User(query["username"], query["first_name"], query["last_name"], query["password"], query["education"],
                     query["employment"], query["music"], query["movie"], query["nationality"], query["birthday"],
                     query["id"])

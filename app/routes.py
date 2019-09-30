@@ -2,6 +2,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, login_required, logout_user, current_user
 
 from app import app, query_db
+from app.ORM.Post import Post, get_all_posts_by_user
 from app.ORM.User import get_user_by_username
 from app.forms import IndexForm, PostForm, FriendsForm, ProfileForm, CommentsForm
 from datetime import datetime
@@ -25,7 +26,7 @@ def index():
                 flash('Sorry, this user does not exist!')
         else:
             flash('Sorry, wrong password!')
-    elif form.register.is_submitted() and form.register.submit.data:    # Register
+    elif form.register.is_submitted() and form.register.submit.data:  # Register
         if form.register.validate_on_submit():
             form.register.validate_parameters()
             return redirect(url_for('index'))
@@ -42,23 +43,25 @@ def logout():
 @app.route('/stream/<username>', methods=['GET', 'POST'])
 @login_required
 def stream(username):
+    user = get_user_by_username(username)
+    if current_user.id != user.id:
+        flash("You don't have access to this section")
+        return redirect(url_for("stream", username=current_user.username))
+
     form = PostForm()
-    user = query_db('SELECT * FROM Users WHERE username="{}";'.format(username), one=True)
-    if form.is_submitted():
+    if form.validate_on_submit():
         if form.image.data:
             path = os.path.join(app.config['UPLOAD_PATH'], form.image.data.filename)
             form.image.data.save(path)
 
-        query_db(
-            'INSERT INTO Posts (u_id, content, image, creation_time) VALUES({}, "{}", "{}", \'{}\');'.format(user['id'],
-                                                                                                             form.content.data,
-                                                                                                             form.image.data.filename,
-                                                                                                             datetime.now()))
+        post = Post(user,
+                    form.content.data,
+                    form.image.data.filename)
+        post.persist()
         return redirect(url_for('stream', username=username))
 
-    posts = query_db(
-        'SELECT p.*, u.*, (SELECT COUNT(*) FROM Comments WHERE p_id=p.id) AS cc FROM Posts AS p JOIN Users AS u ON u.id=p.u_id WHERE p.u_id IN (SELECT u_id FROM Friends WHERE f_id={0}) OR p.u_id IN (SELECT f_id FROM Friends WHERE u_id={0}) OR p.u_id={0} ORDER BY p.creation_time DESC;'.format(
-            user['id']))
+    posts = get_all_posts_by_user(user)
+
     return render_template('stream.html', title='Stream', username=username, form=form, posts=posts)
 
 

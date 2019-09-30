@@ -58,7 +58,7 @@ class IndexForm(FlaskForm):
 
 
 class PostForm(FlaskForm):
-    content = TextAreaField('New Post', render_kw={'placeholder': 'What are you thinking about?'})
+    content = TextAreaField('New Post', [InputRequired("This field is required")], render_kw={'placeholder': 'What are you thinking about?'})
     image = FileField('Image')
     submit = SubmitField('Post')
 
