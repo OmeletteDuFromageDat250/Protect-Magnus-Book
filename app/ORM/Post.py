@@ -4,7 +4,7 @@ from app import query_db
 from app.ORM.User import get_user_by_id
 
 
-class Post():
+class Post:
     def __init__(self, user, content, image, creation_time=datetime.datetime.now(), id=0):
         self.id = id  # Never persisted
         self.user = user
@@ -18,6 +18,15 @@ class Post():
             self.content,
             self.image,
             self.creation_time))
+
+
+def get_post_by_id(post_id):
+    query = query_db(
+        'SELECT * FROM Posts WHERE id == "{}";'.format(
+            post_id), one=True)
+    user = get_user_by_id(query["u_id"])
+    post = Post(user, query["content"], query["image"], query["creation_time"], query["id"])
+    return post
 
 
 def get_all_posts_by_user(user):

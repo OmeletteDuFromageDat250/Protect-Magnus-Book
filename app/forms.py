@@ -64,7 +64,7 @@ class PostForm(FlaskForm):
 
 
 class CommentsForm(FlaskForm):
-    comment = TextAreaField('New Comment', render_kw={'placeholder': 'What do you have to say?'})
+    comment = TextAreaField('New Comment', [InputRequired("This field is required")], render_kw={'placeholder': 'What do you have to say?'})
     submit = SubmitField('Comment')
 
 

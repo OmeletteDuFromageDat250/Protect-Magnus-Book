@@ -2,7 +2,8 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, login_required, logout_user, current_user
 
 from app import app, query_db
-from app.ORM.Post import Post, get_all_posts_by_user
+from app.ORM.Comment import Comment, get_all_comments_by_post
+from app.ORM.Post import Post, get_all_posts_by_user, get_post_by_id
 from app.ORM.User import get_user_by_username
 from app.forms import IndexForm, PostForm, FriendsForm, ProfileForm, CommentsForm
 from datetime import datetime
@@ -70,18 +71,14 @@ def stream(username):
 @login_required
 def comments(username, p_id):
     form = CommentsForm()
-    if form.is_submitted():
-        user = query_db('SELECT * FROM Users WHERE username="{}";'.format(username), one=True)
-        query_db('INSERT INTO Comments (p_id, u_id, comment, creation_time) VALUES({}, {}, "{}", \'{}\');'.format(p_id,
-                                                                                                                  user[
-                                                                                                                      'id'],
-                                                                                                                  form.comment.data,
-                                                                                                                  datetime.now()))
+    post = get_post_by_id(p_id)
+    user = current_user
 
-    post = query_db('SELECT * FROM Posts WHERE id={};'.format(p_id), one=True)
-    all_comments = query_db(
-        'SELECT DISTINCT * FROM Comments AS c JOIN Users AS u ON c.u_id=u.id WHERE c.p_id={} ORDER BY c.creation_time DESC;'.format(
-            p_id))
+    if form.validate_on_submit():
+        comment = Comment(post, user, form.comment.data)
+        comment.persist()
+
+    all_comments = get_all_comments_by_post(post)
     return render_template('comments.html', title='Comments', username=username, form=form, post=post,
                            comments=all_comments)
 
