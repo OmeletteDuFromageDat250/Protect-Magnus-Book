@@ -2,6 +2,7 @@ from flask import render_template, flash, redirect, url_for, request
 from flask_login import login_user, login_required, logout_user, current_user
 
 from app import app, query_db
+from app.ORM.User import get_user_by_username
 from app.forms import IndexForm, PostForm, FriendsForm, ProfileForm, CommentsForm
 from datetime import datetime
 import os
@@ -105,18 +106,19 @@ def friends(username):
 @app.route('/profile/<username>', methods=['GET', 'POST'])
 @login_required
 def profile(username):
-    if current_user.username != username:
-        flash("You don't have access to this page")
-        return redirect(url_for("stream", username=current_user.username))
-
+    user = get_user_by_username(username)
     form = ProfileForm()
-    if form.is_submitted():
-        query_db(
-            'UPDATE Users SET education="{}", employment="{}", music="{}", movie="{}", nationality="{}", birthday=\'{}\' WHERE username="{}" ;'.format(
-                form.education.data, form.employment.data, form.music.data, form.movie.data, form.nationality.data,
-                form.birthday.data, username
-            ))
-        return redirect(url_for('profile', username=username))
-
-    user = query_db('SELECT * FROM Users WHERE username="{}";'.format(username), one=True)
-    return render_template('profile.html', title='profile', username=username, user=user, form=form)
+    if current_user.id == user.id:
+        if form.is_submitted() and form.validate():
+            user.education = form.education.data
+            user.employment = form.employment.data
+            user.music = form.music.data
+            user.movie = form.movie.data
+            user.nationality = form.nationality.data
+            user.birthday = form.birthday.data
+            user.update()
+            return redirect(url_for('profile', username=username))
+        else:
+            return render_template('profile.html', title='profile', username=username, user=user, form=form)
+    else:
+        return render_template('profile.html', title='profile', username=username, user=user)
