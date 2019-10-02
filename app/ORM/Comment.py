@@ -1,7 +1,6 @@
 import datetime
 
 from app import query_db
-from app.ORM.Post import get_post_by_id
 from app.ORM.User import get_user_by_id
 
 
@@ -31,6 +30,5 @@ def get_all_comments_by_post(post):
     comments = []
     for e in query:
         user = get_user_by_id(e["u_id"])
-        post = get_post_by_id(e["p_id"])
         comments.append(Comment(post, user, e["comment"], e["creation_time"], e["id"]))
     return comments

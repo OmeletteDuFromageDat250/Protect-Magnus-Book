@@ -50,21 +50,18 @@ def stream(username):
     posts = get_all_posts_by_user(user)
     form = PostForm()
 
-    if current_user.id == user.id:
-        if form.validate_on_submit():
-            if form.image.data:
-                path = os.path.join(app.config['UPLOAD_PATH'], form.image.data.filename)
-                form.image.data.save(path)
+    if form.validate_on_submit():
+        if form.image.data:
+            path = os.path.join(app.config['UPLOAD_PATH'], form.image.data.filename)
+            form.image.data.save(path)
 
-            post = Post(user,
-                        form.content.data,
-                        form.image.data.filename)
-            post.persist()
-            return redirect(url_for('stream', username=username))
-        else:
-            return render_template('stream.html', title='Stream', username=username, form=form, posts=posts)
+        post = Post(current_user,
+                    form.content.data,
+                    form.image.data.filename)
+        post.persist()
+        return redirect(url_for('stream', username=username))
     else:
-        return render_template('stream.html', title='Stream', username=username, posts=posts)
+        return render_template('stream.html', title='Stream', username=username, form=form, posts=posts)
 
 
 # comment page for a given post and user.
