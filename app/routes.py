@@ -23,7 +23,7 @@ def index():
         if form.login.validate_on_submit():
             user = form.login.get_authenticated_user()
             if user:
-                login_user(user)
+                login_user(user, remember=form.login.remember_me.data)
                 return redirect(url_for('stream', username=form.login.username.data))
             else:
                 flash('Sorry, wrong credentials !')
