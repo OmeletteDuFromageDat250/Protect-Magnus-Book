@@ -96,10 +96,10 @@ def friends(username):
         friend_user = get_user_by_username(form.username.data)
         if friend_user is None:
             flash('User does not exist')
-        elif friend_user in user.friends:
+        elif friend_user in user.get_friends():
             flash('You are already friend with {}'.format(friend_user.username))
         else:
-            user.friend.append(friend_user)
+            user.add_friend(friend_user)
             user.persist_friends()
     return render_template('friends.html', title='Friends', username=username, user=user, form=form)
 

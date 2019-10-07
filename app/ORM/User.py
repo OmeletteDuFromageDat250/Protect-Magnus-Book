@@ -18,10 +18,17 @@ class User(UserMixin):
         self.movie = movie
         self.nationality = nationality
         self.birthday = birthday
-        self.friends = []
+        self._friends = []
+        self._friends_to_save = []
 
     def get_id(self):
         return self.username
+
+    def add_friend(self, user):
+        self._friends_to_save.append(user)
+
+    def get_friends(self):
+        return self._friends + self._friends_to_save
 
     def persist(self):
         query_db('INSERT INTO Users (username, first_name, last_name, password) VALUES("{}", "{}", "{}", "{}");'.format(
@@ -35,16 +42,10 @@ class User(UserMixin):
             ))
 
     def persist_friends(self):
-        for e in self.friends:
-            if e.id is None:
-                query_db('INSERT INTO Friends (u_id, f_id) VALUES({}, {});'.format(
-                    e.user.id,
-                    e.friend.id))
-            else:
-                query_db('UPDATE Friends SET u_id="{}", f_id="{}" WHERE u_id="{}";'.format(
-                    e.user.id,
-                    e.friend.id,
-                    e.user.id))
+        for e in self._friends_to_save:
+            query_db('INSERT INTO Friends (u_id, f_id) VALUES({}, {});'.format(
+                self.id,
+                e.id))
 
     def __eq__(self, other):
         return self.__class__ == other.__class__ and self.id == other.id
@@ -56,7 +57,7 @@ def get_user_by_username(user_name):
         user = User(query["username"], query["first_name"], query["last_name"], query["password"], query["education"],
                     query["employment"], query["music"], query["movie"], query["nationality"], query["birthday"],
                     query["id"])
-        user.friends = get_all_friends_by_user(user.id)
+        user._friends = get_all_friends_by_user(user.id)
         return user
     except Exception as e:
         return None
@@ -68,7 +69,7 @@ def get_user_by_id(user_id):
         user = User(query["username"], query["first_name"], query["last_name"], query["password"], query["education"],
                     query["employment"], query["music"], query["movie"], query["nationality"], query["birthday"],
                     query["id"])
-        user.friends = get_all_friends_by_user(user)
+        user._friends = get_all_friends_by_user(user)
         return user
     except:
         return None
