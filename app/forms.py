@@ -2,6 +2,7 @@ from _sha256 import sha256
 
 from flask_login import login_user
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, FormField, TextAreaField, FileField
 from wtforms.fields.html5 import DateField
 
@@ -59,7 +60,7 @@ class IndexForm(FlaskForm):
 
 class PostForm(FlaskForm):
     content = TextAreaField('New Post', [InputRequired("This field is required")], render_kw={'placeholder': 'What are you thinking about?'})
-    image = FileField('Image')
+    image = FileField('Image', validators=[FileAllowed(['jpg', 'png'])])
     submit = SubmitField('Post')
 
 
